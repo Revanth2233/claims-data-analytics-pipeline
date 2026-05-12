@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Password123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "Password123!" -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./sql:/sql
+    entrypoint: >
+      bash -c "
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'Password123!' -i /sql/001_create_schema.sql &&
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P 'Password123!' -i /sql/002_stored_procedures.sql
+      "
+
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    environment:
+      DB_CONNECTION: "mssql+pyodbc://sa:Password123!@sqlserver:1433/ClaimsDB?driver=ODBC+Driver+17+for+SQL+Server"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command: python pipeline.py --start-date 2024-01-01 --end-date 2024-12-31
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      ConnectionStrings__ClaimsDB: "Server=sqlserver,1433;Database=ClaimsDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: "http://localhost:5000/api"
+    depends_on:
+      - api
+
+volumes:
+  sqldata:

@@ -1,0 +1,34 @@
+{
+  "name": "claims-analytics-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@tanstack/react-query": "^5.40.0",
+    "@tanstack/react-router": "^1.36.0",
+    "axios": "^1.7.2",
+    "recharts": "^2.12.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@mui/material": "^5.15.21",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "date-fns": "^3.6.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.13",
+    "vitest": "^1.6.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.4.6"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest run --coverage",
+    "lint": "eslint src --ext ts,tsx"
+  }
+}
